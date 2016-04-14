@@ -1,0 +1,72 @@
+(i)
+# Code in shell.
+cd F:/Airline2012_13
+
+# find the location of ORIGIN column.
+column=$(head -n 1 2012_August.csv | egrep -o .*\"ORIGIN\" | tr -dc , | wc -m)
+column=$(( $column + 1 ))
+
+# calculate the counts of outbound flights and calculate the time of running code. 
+time cut -d, -f$column *.csv | cut -d , -f 1 | sort | uniq -c | sort -nr | egrep "OAK|SMF|LAX|JFK|SFO"
+
+
+# Code in R.
+maketable<-function(i){
+  d = read.csv(dir[i])
+  #find the index of "OAK","SMF","LAX","SFO","JFK" in table
+  index=match(c("OAK","SMF","LAX","SFO","JFK"),names(table(d$ORIGIN)))
+  # return table of "OAK","SMF","LAX","SFO","JFK"
+  table(d$ORIGIN)[index]
+}
+
+system.time(sapply(1:length(dir), function(x) maketable(x)))
+
+# count the five outbound flights of each csv file and make a matrix
+a=sapply(1:length(dir), function(x) maketable(x))
+
+# count the total numbers of outbound flights for the five airports
+b=sapply(1:5, function(x) sum(a[x,]))
+
+# add name for the counts and make the results readable
+c=matrix(b)
+rownames(c)<-c("OAK","SMF","LAX","SFO","JFK")
+
+# sort these counts from largest to smallest
+outboundf=apply(c, 2, sort, decreasing=TRUE)
+
+
+
+(ii)
+# Code in R and shell 
+# in R, find the location of column ORIGIN and DEST. 
+d1 = read.csv("2012_August.csv", nrow  = 30)
+match(c("ORIGIN", "DEST"), names(d))  # getting the location is 15,24
+
+# in shell check if 15, 24 is the right location of columns ORIGIN and DEST
+cut -d, -f 15,24 2012_August.csv | head -n2
+
+# it turns out that 15, 25 is the right location of columns ORIGIN and DEST
+cut -d, -f 15,25 2012_August.csv | head -n2
+
+# creat a csv file 
+cut -d , -f 15,25 *.csv | egrep "OAK|SMF|LAX|JFK|SFO" > oripairsdest.csv
+
+# in R, read the csv file created by shell
+d = read.csv("F://Airline2012_13//oripairsdest.csv", header=FALSE)
+names(d)=c("Origin","Destination")
+
+# calculate the count of the lines in files which involve any of these five airports
+length(d$Origin)
+
+# compute the total number of flights for each of the 5 airports.
+Airport=c("OAK","SMF","LAX","JFK","SFO")
+Ori=sapply(1:5, function(x) which(d$Origin==Airport[x]))
+Dest=sapply(1:5, function(x) which(d$Destination==Airport[x]))
+Ori1=unlist(Ori)
+Dest1=unlist(Dest)
+OriDest=intersect(Ori1, Dest1)
+length(OriDest)
+
+
+
+
